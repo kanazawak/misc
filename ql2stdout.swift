@@ -22,7 +22,7 @@ QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { (thumbnai
 
     guard let thumbnail = thumbnail,
           let tiffData = thumbnail.nsImage.tiffRepresentation else {
-        fputs("Failed to convert thumbnail to PNG.\n", stderr)
+        fputs("Failed to convert thumbnail to TIFF.\n", stderr)
         exit(1)
     }
 
