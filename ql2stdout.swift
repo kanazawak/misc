@@ -1,0 +1,33 @@
+import QuickLookThumbnailing
+import AppKit
+
+let args = CommandLine.arguments
+guard args.count > 1 else {
+    fputs("Usage: ql2stdout <file-path>\n", stderr)
+    exit(1)
+}
+
+let request = QLThumbnailGenerator.Request(
+    fileAt: URL(fileURLWithPath: CommandLine.arguments[1]),
+    size: CGSize(width: 1024, height: 1024),
+    scale: 1.0,
+    representationTypes: .thumbnail
+)
+
+QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { (thumbnail, error) in
+    if let error = error {
+        fputs("Failed to generate thumbnail: \(error.localizedDescription)\n", stderr)
+        exit(1)
+    }
+
+    guard let thumbnail = thumbnail,
+          let tiffData = thumbnail.nsImage.tiffRepresentation else {
+        fputs("Failed to convert thumbnail to PNG.\n", stderr)
+        exit(1)
+    }
+
+    FileHandle.standardOutput.write(tiffData)
+    exit(0)
+}
+
+RunLoop.main.run()
