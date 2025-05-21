@@ -11,7 +11,7 @@ let request = QLThumbnailGenerator.Request(
     fileAt: URL(fileURLWithPath: CommandLine.arguments[1]),
     size: CGSize(width: 1024, height: 1024),
     scale: 1.0,
-    representationTypes: .thumbnail
+    representationTypes: .all
 )
 
 QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { (thumbnail, error) in
