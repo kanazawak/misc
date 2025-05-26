@@ -1,6 +1,11 @@
 #!/usr/bin/env perl
 
+use strict;
+use warnings;
+
 use File::stat;
+use Fcntl qw(:mode);
+use POSIX qw(strftime);
 
 my %is_binary_ext = (
   'pdf' => 1,
@@ -21,19 +26,37 @@ sub header {
   /(^|\/)([^\/]+)$/;
   my $name = $2;
 
-  my $stat_format =<<'__EOS__';
-Permission: %Sp
-Created:    %SB
-__EOS__
-  my $time_format = '%y/%m/%d %H:%M:%S';
-  my $stat = `stat -f '$stat_format' -t '$time_format' '$_'`;
+  my $st = stat($_);
+  my $mode = $st->mode;
+  my $mode_str =
+    ( $mode & S_IFDIR ? 'd'
+    : $mode & S_IFLNK ? 'l'
+    :                   '-' )
+    . ($mode & S_IRUSR ? 'r' : '-')
+    . ($mode & S_IWUSR ? 'W' : '-')
+    . ($mode & S_IXUSR ? 'x' : '-')
+    . ($mode & S_IRGRP ? 'r' : '-')
+    . ($mode & S_IWGRP ? 'w' : '-')
+    . ($mode & S_IXGRP ? 'x' : '-')
+    . ($mode & S_IROTH ? 'r' : '-')
+    . ($mode & S_IWOTH ? 'w' : '-')
+    . ($mode & S_IXOTH ? 'x' : '-');
+  my $time_str = strftime "%Y-%m-%d %H:%M:%S", localtime($st->ctime);
+  return <<"__EOS__";
+$name
+Mode:    $mode_str
+Created: $time_str
 
-  return "$name\n$stat\n";
+__EOS__
 }
 
 sub preview_binary_file {
   print header;
-  system("ql2stdout '$_' | wezterm imgcat");
+  open my $out, '|-', 'wezterm', 'imgcat';
+  open my $in, '-|', 'ql2stdout', $_;
+  print $out $_ while (<$in>);
+  close $in;
+  close $out;
 }
 
 sub preview_directory {
