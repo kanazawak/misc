@@ -1,9 +1,6 @@
 #!/usr/bin/env perl
 
-use strict;
-use warnings;
-
-use File::stat;
+use File::stat qw(lstat);
 use Fcntl qw(:mode);
 use POSIX qw(strftime);
 
@@ -26,14 +23,19 @@ sub header {
   /(^|\/)([^\/]+)$/;
   my $name = $2;
 
-  my $st = stat($_);
+  my $st = lstat($_);
   my $mode = $st->mode;
   my $mode_str =
-    ( $mode & S_IFDIR ? 'd'
-    : $mode & S_IFLNK ? 'l'
-    :                   '-' )
+    (   S_ISREG($mode)  ? '-'
+      : S_ISDIR($mode)  ? 'd'
+      : S_ISLNK($mode)  ? 'l'
+      : S_ISCHR($mode)  ? 'c'
+      : S_ISBLK($mode)  ? 'b'
+      : S_ISFIFO($mode) ? 'p'
+      : S_ISSOCK($mode) ? 's'
+      :                   '?' )
     . ($mode & S_IRUSR ? 'r' : '-')
-    . ($mode & S_IWUSR ? 'W' : '-')
+    . ($mode & S_IWUSR ? 'w' : '-')
     . ($mode & S_IXUSR ? 'x' : '-')
     . ($mode & S_IRGRP ? 'r' : '-')
     . ($mode & S_IWGRP ? 'w' : '-')
@@ -65,7 +67,7 @@ sub preview_directory {
   print $out header;
 
   open my $in, '-|', 'ls',
-    '-1pFG',
+    '-1pFGH',
     '--color=force',
     $_;
   print $out $_ while (<$in>);
@@ -91,11 +93,10 @@ sub preview_text_file {
   close $out;
 }
 
-while (<>) {
-  system 'clear';
-  chomp;
-  if    (! -e)         { print STDERR "The path not exists.\n" }
-  elsif (is_binary)    { preview_binary_file }
-  elsif (is_directory) { preview_directory }
-  else                 { preview_text_file }
-}
+$_ = $ARGV[0];
+chomp;
+system 'clear';
+if    (! -e)         { print STDERR "The path not exists.\n" }
+elsif (is_binary)    { preview_binary_file }
+elsif (is_directory) { preview_directory }
+else                 { preview_text_file }
