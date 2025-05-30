@@ -70,7 +70,12 @@ sub preview_directory {
     '-1pFGH',
     '--color=force',
     $_;
-  print $out $_ while (<$in>);
+
+  my $max_lines = `tput lines` - 5;
+  while (<$in>) {
+    last unless $max_lines--;
+    print $out $_;
+  }
 
   close $in;
   close $out;
@@ -82,8 +87,10 @@ sub preview_text_file {
     '--RAW-CONTROL-CHARS';
   print $out header;
 
+  my $max_lines = `tput lines` - 5;
   open my $in, '-|', 'bat',
     '--plain',
+    '--line-range', "1:$max_lines",
     '--wrap', 'never',
     '--color', 'always',
     $_;
@@ -93,10 +100,12 @@ sub preview_text_file {
   close $out;
 }
 
-$_ = $ARGV[0];
-chomp;
-system 'clear';
-if    (! -e)         { print STDERR "The path not exists.\n" }
-elsif (is_binary)    { preview_binary_file }
-elsif (is_directory) { preview_directory }
-else                 { preview_text_file }
+while (<>) {
+  chomp;
+  system 'clear';
+  if    (!/\S/)        { }
+  elsif (! -e)         { print STDERR "The path not exists.\n" }
+  elsif (is_binary)    { preview_binary_file }
+  elsif (is_directory) { preview_directory }
+  else                 { preview_text_file }
+}

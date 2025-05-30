@@ -1,3 +1,5 @@
+#!/usr/bin/env swiftc -framework AppKit
+
 import QuickLookThumbnailing
 import AppKit
 
@@ -8,7 +10,7 @@ guard args.count > 1 else {
 }
 
 let request = QLThumbnailGenerator.Request(
-    fileAt: URL(fileURLWithPath: CommandLine.arguments[1]),
+    fileAt: URL(fileURLWithPath: args[1]),
     size: CGSize(width: 1024, height: 1024),
     scale: 1.0,
     representationTypes: .all
