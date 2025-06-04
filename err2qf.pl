@@ -19,7 +19,6 @@ while (<>) {
     my $lnum = $2;
     my $col  = $3;
     my $text = $4;
-    print "\x1b]51;[\"call\",\"Tapi_qfadd\",[]\x07";
     call 'qfadd', "\"$file\",$lnum,$col,\"$text\"";
   }
 }
