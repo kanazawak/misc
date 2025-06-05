@@ -12,7 +12,6 @@ call 'qfopen';
 while (<>) {
   print;
   if (/Building\.\.\./) {
-    print "\x1b]51;[\"call\",\"Tapi_qfclear\",[]]\x07";
     call 'qfclear';
   } elsif (/^(.+.cs)\((\d+),(\d+)\): error (.+?)( \[.+\])?$/) {
     my $file = $1;
